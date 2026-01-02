@@ -15,3 +15,11 @@
 
 # Keep shared preferences
 -keep class android.content.SharedPreferences { *; }
+
+# Google Play Core (para Flutter deferred components - ignorar si no se usa)
+-dontwarn com.google.android.play.core.**
+-keep class com.google.android.play.core.** { *; }
+
+# Google Play Core (para Flutter deferred components)
+-dontwarn com.google.android.play.core.**
+-keep class com.google.android.play.core.** { *; }
