@@ -3,10 +3,12 @@ import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../widgets/card_widget.dart';
 import '../widgets/help_button.dart';
+import '../widgets/hint_button.dart';
 import '../widgets/feedback_icon_button.dart';
 import '../widgets/confirmation_dialog.dart';
 import '../utils/constants.dart';
 import '../utils/colors.dart';
+import '../utils/responsive_helper.dart';
 import '../utils/tutorial_data.dart';
 import '../widgets/tutorial_dialog.dart';
 import 'victory_screen.dart';
@@ -20,6 +22,8 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
+  String? _currentHint;
+
   @override
   void initState() {
     super.initState();
@@ -84,7 +88,7 @@ class _GameScreenState extends State<GameScreen> {
               _buildHeader(context, gameProvider),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: ResponsiveHelper.getResponsivePadding(context),
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final availableWidth = constraints.maxWidth;
@@ -131,6 +135,7 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                 ),
               ),
+              _buildHintSection(context, gameProvider),
               _buildFooter(context, gameProvider),
             ],
           ),
@@ -140,8 +145,12 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Widget _buildHeader(BuildContext context, GameProvider gameProvider) {
+    final isTablet = ResponsiveHelper.isTablet(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+      padding: EdgeInsets.symmetric(
+        horizontal: isTablet ? 20.0 : 12.0,
+        vertical: isTablet ? 12.0 : 8.0,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -168,18 +177,18 @@ class _GameScreenState extends State<GameScreen> {
               children: [
                 Text(
                   'Parejas: ${gameProvider.pairsFound}/${gameProvider.totalPairs}',
-                  style: const TextStyle(
-                    fontSize: 18,
+                  style: TextStyle(
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 18),
                     fontWeight: FontWeight.bold,
                     color: Colors.black87,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 2),
+                SizedBox(height: isTablet ? 4 : 2),
                 Text(
                   'Movimientos: ${gameProvider.moves}',
-                  style: const TextStyle(
-                    fontSize: 14,
+                  style: TextStyle(
+                    fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
                     color: Colors.black54,
                   ),
                   textAlign: TextAlign.center,
@@ -190,13 +199,13 @@ class _GameScreenState extends State<GameScreen> {
           Row(
             children: [
               HelpButton(gameKey: 'memory'),
-              const SizedBox(width: 8),
+              SizedBox(width: isTablet ? 12 : 8),
               IconButton(
                 icon: Icon(
                   gameProvider.gameState == GameState.paused
                       ? Icons.play_arrow
                       : Icons.pause,
-                  size: 28,
+                  size: ResponsiveHelper.getResponsiveIconSize(context, 28),
                 ),
                 onPressed: () {
                   if (gameProvider.gameState == GameState.paused) {
@@ -216,9 +225,52 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  Widget _buildFooter(BuildContext context, GameProvider gameProvider) {
+  Widget _buildHintSection(BuildContext context, GameProvider gameProvider) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          if (_currentHint != null)
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.amber.shade300,
+                    width: 2,
+                  ),
+                ),
+                child: Text(
+                  _currentHint!,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ),
+          if (_currentHint != null) const SizedBox(width: 12),
+          HintButton(
+            onHintRevealed: (hint) {
+              setState(() => _currentHint = hint);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooter(BuildContext context, GameProvider gameProvider) {
+    final isTablet = ResponsiveHelper.isTablet(context);
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: isTablet ? 24.0 : 16.0,
+        vertical: isTablet ? 16.0 : 12.0,
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -229,17 +281,25 @@ class _GameScreenState extends State<GameScreen> {
                 gameProvider.resetGame();
               }
             },
-            icon: const Icon(Icons.refresh, size: 20),
-            label: const Text('Reiniciar'),
+            icon: Icon(
+              Icons.refresh,
+              size: ResponsiveHelper.getResponsiveIconSize(context, 20),
+            ),
+            label: Text(
+              'Reiniciar',
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: Colors.black87,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 10,
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 28 : 20,
+                vertical: isTablet ? 14 : 10,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(isTablet ? 24 : 20),
               ),
             ),
           ),
@@ -256,17 +316,25 @@ class _GameScreenState extends State<GameScreen> {
                 );
               }
             },
-            icon: const Icon(Icons.home, size: 20),
-            label: const Text('Inicio'),
+            icon: Icon(
+              Icons.home,
+              size: ResponsiveHelper.getResponsiveIconSize(context, 20),
+            ),
+            label: Text(
+              'Inicio',
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
+              ),
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 10,
+              padding: EdgeInsets.symmetric(
+                horizontal: isTablet ? 28 : 20,
+                vertical: isTablet ? 14 : 10,
               ),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(isTablet ? 24 : 20),
               ),
             ),
           ),

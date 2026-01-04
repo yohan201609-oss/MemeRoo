@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/shadow_provider.dart';
+import '../providers/game_provider.dart';
 import '../models/shadow_animal_model.dart';
 import '../widgets/help_button.dart';
 import '../widgets/feedback_icon_button.dart';
 import '../widgets/confirmation_dialog.dart';
+import '../widgets/hint_button.dart';
 import '../utils/colors.dart';
 import '../utils/tutorial_data.dart';
 import '../widgets/tutorial_dialog.dart';
@@ -19,6 +21,8 @@ class ShadowGameScreen extends StatefulWidget {
 }
 
 class _ShadowGameScreenState extends State<ShadowGameScreen> {
+  String? _currentHint;
+
   @override
   void initState() {
     super.initState();
@@ -84,9 +88,49 @@ class _ShadowGameScreenState extends State<ShadowGameScreen> {
                     ? _buildGameArea(context, provider)
                     : const Center(child: CircularProgressIndicator()),
               ),
+              _buildHintSection(context),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHintSection(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          if (_currentHint != null)
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: Colors.amber.shade300,
+                    width: 2,
+                  ),
+                ),
+                child: Text(
+                  _currentHint!,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ),
+          if (_currentHint != null) const SizedBox(width: 12),
+          HintButton(
+            onHintRevealed: (hint) {
+              setState(() => _currentHint = hint);
+            },
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../utils/colors.dart';
 import '../utils/audio_manager.dart';
+import '../utils/ad_manager.dart';
+import '../utils/responsive_helper.dart';
 import 'home_screen.dart';
 import 'cascade_home_screen.dart';
 import 'guess_home_screen.dart';
@@ -11,8 +14,28 @@ import 'riddle_home_screen.dart';
 import 'dots_home_screen.dart';
 import 'settings_screen.dart';
 
-class MainMenuScreen extends StatelessWidget {
+class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({super.key});
+
+  @override
+  State<MainMenuScreen> createState() => _MainMenuScreenState();
+}
+
+class _MainMenuScreenState extends State<MainMenuScreen> {
+  final _adManager = AdManager();
+
+  @override
+  void initState() {
+    super.initState();
+    // Cargar banner ad cuando se muestra el menú
+    _adManager.loadBannerAd();
+  }
+
+  @override
+  void dispose() {
+    _adManager.disposeBannerAd();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,14 +75,14 @@ class MainMenuScreen extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                    padding: ResponsiveHelper.getResponsivePadding(context),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         // Logo del juego
                   Container(
-                    width: 90,
-                    height: 90,
+                    width: ResponsiveHelper.isTablet(context) ? 120 : 90,
+                    height: ResponsiveHelper.isTablet(context) ? 120 : 90,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
@@ -74,34 +97,34 @@ class MainMenuScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(
                         'assets/images/logo.png',
-                        width: 90,
-                        height: 90,
+                        width: ResponsiveHelper.isTablet(context) ? 120 : 90,
+                        height: ResponsiveHelper.isTablet(context) ? 120 : 90,
                         fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  SizedBox(height: ResponsiveHelper.isTablet(context) ? 16 : 12),
                   
                   // Título
-                  const Text(
+                  Text(
                     'MemeRoo',
                     style: TextStyle(
-                      fontSize: 32,
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 32),
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 4),
-                  const Text(
+                  SizedBox(height: ResponsiveHelper.isTablet(context) ? 6 : 4),
+                  Text(
                     'Juegos de Animales',
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 16),
                       color: Colors.black54,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: ResponsiveHelper.isTablet(context) ? 32 : 24),
                   
                   // Botones de juegos
                   Expanded(
@@ -243,10 +266,20 @@ class MainMenuScreen extends StatelessWidget {
                               );
                             },
                           ),
+                          const SizedBox(height: 20),
                         ],
                       ),
                     ),
                   ),
+                  // BANNER AD
+                  if (_adManager.isBannerLoaded && _adManager.bannerAd != null)
+                    Container(
+                      alignment: Alignment.center,
+                      width: double.infinity,
+                      height: _adManager.bannerAd!.size.height.toDouble(),
+                      color: Colors.transparent,
+                      child: AdWidget(ad: _adManager.bannerAd!),
+                    ),
                         ],
                       ),
                     ),
@@ -267,14 +300,15 @@ class MainMenuScreen extends StatelessWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
+    final isTablet = ResponsiveHelper.isTablet(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(isTablet ? 28 : 20),
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(isTablet ? 24 : 20),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.2),
@@ -286,46 +320,46 @@ class MainMenuScreen extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 60,
-              height: 60,
+              width: isTablet ? 80 : 60,
+              height: isTablet ? 80 : 60,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: BorderRadius.circular(isTablet ? 18 : 15),
               ),
               child: Icon(
                 icon,
-                size: 32,
+                size: ResponsiveHelper.getResponsiveIconSize(context, 32),
                 color: Colors.white,
               ),
             ),
-            const SizedBox(width: 16),
+            SizedBox(width: isTablet ? 20 : 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontSize: 22,
+                    style: TextStyle(
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 22),
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  SizedBox(height: isTablet ? 6 : 4),
                   Text(
                     description,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
                       color: Colors.white.withOpacity(0.9),
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios,
               color: Colors.white,
-              size: 20,
+              size: ResponsiveHelper.getResponsiveIconSize(context, 20),
             ),
           ],
         ),

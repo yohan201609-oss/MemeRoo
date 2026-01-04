@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/cascade_provider.dart';
+import '../providers/game_provider.dart';
 import '../utils/colors.dart';
+import '../utils/ad_manager.dart';
+import '../utils/ad_frequency_manager.dart';
+import '../utils/audio_manager.dart';
+import '../utils/responsive_helper.dart';
 import 'cascade_game_screen.dart';
 import 'main_menu_screen.dart';
 
@@ -91,7 +96,7 @@ class _CascadeHomeScreenState extends State<CascadeHomeScreen> {
                             stars: _getStarsDisplay(snapshot.data?['easy'] ?? 0),
                             color: Colors.green.shade300,
                           ),
-                          const SizedBox(height: 24),
+                          SizedBox(height: ResponsiveHelper.isTablet(context) ? 32 : 24),
                           _buildLevelButton(
                             context,
                             level: 'medium',
@@ -100,7 +105,7 @@ class _CascadeHomeScreenState extends State<CascadeHomeScreen> {
                             stars: _getStarsDisplay(snapshot.data?['medium'] ?? 0),
                             color: Colors.orange.shade300,
                           ),
-                          const SizedBox(height: 24),
+                          SizedBox(height: ResponsiveHelper.isTablet(context) ? 32 : 24),
                           _buildLevelButton(
                             context,
                             level: 'hard',
@@ -146,19 +151,44 @@ class _CascadeHomeScreenState extends State<CascadeHomeScreen> {
   }) {
     return GestureDetector(
       onTap: () {
+        AudioManager().playTap();
+        
+        // Mostrar interstitial si está disponible y cumple con la frecuencia
+        if (AdFrequencyManager.canShowInterstitial()) {
+          AdManager().showInterstitialAd();
+          AdFrequencyManager.markInterstitialShown();
+        }
+        
+        // Actualizar GameProvider con el nombre del juego para el sistema de pistas
+        context.read<GameProvider>().initializeGame(level, gameName: 'cascade');
+        
+        // Inicializar juego
         context.read<CascadeProvider>().initializeGame(level);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const CascadeGameScreen()),
-        );
+        
+        // Pequeño delay para que se muestre el anuncio antes de navegar
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (context.mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const CascadeGameScreen()),
+            );
+          }
+        });
       },
       child: Container(
-        width: 280,
-        constraints: const BoxConstraints(minHeight: 100),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        width: ResponsiveHelper.isTablet(context) ? 360 : 280,
+        constraints: BoxConstraints(
+          minHeight: ResponsiveHelper.isTablet(context) ? 120 : 100,
+        ),
+        padding: EdgeInsets.symmetric(
+          vertical: ResponsiveHelper.isTablet(context) ? 16 : 12,
+          horizontal: ResponsiveHelper.isTablet(context) ? 20 : 16,
+        ),
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(
+            ResponsiveHelper.isTablet(context) ? 24 : 20,
+          ),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.2),
@@ -173,22 +203,24 @@ class _CascadeHomeScreenState extends State<CascadeHomeScreen> {
           children: [
             Text(
               stars.isEmpty ? '⭐' : stars,
-              style: const TextStyle(fontSize: 28),
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 28),
+              ),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: ResponsiveHelper.isTablet(context) ? 8 : 6),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 24,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 24),
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 2),
+            SizedBox(height: ResponsiveHelper.isTablet(context) ? 4 : 2),
             Text(
               subtitle,
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
                 color: Colors.white70,
               ),
               textAlign: TextAlign.center,

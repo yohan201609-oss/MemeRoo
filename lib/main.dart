@@ -12,6 +12,7 @@ import 'providers/dots_provider.dart';
 import 'screens/main_menu_screen.dart';
 import 'utils/audio_manager.dart';
 import 'utils/preferences_cache.dart';
+import 'utils/ad_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,8 +20,17 @@ void main() async {
   // Inicializar cache de preferencias
   await PreferencesCache().init();
 
+  // Inicializar AdMob
+  await AdManager().initialize();
+
   // Inicializar audio
   await AudioManager().init();
+
+  // Cargar primer interstitial
+  AdManager().loadInterstitialAd();
+
+  // Precargar rewarded ad para pistas
+  AdManager().loadRewardedAd();
 
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,

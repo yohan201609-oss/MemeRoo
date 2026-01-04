@@ -3,6 +3,9 @@ import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../utils/colors.dart';
 import '../utils/audio_manager.dart';
+import '../utils/ad_manager.dart';
+import '../utils/ad_frequency_manager.dart';
+import '../utils/responsive_helper.dart';
 import '../widgets/help_button.dart';
 import 'game_screen.dart';
 import 'main_menu_screen.dart';
@@ -26,12 +29,15 @@ class HomeScreen extends StatelessWidget {
             children: [
               // Botón de volver y ayuda
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: ResponsiveHelper.getResponsivePadding(context),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.arrow_back, size: 28),
+                      icon: Icon(
+                        Icons.arrow_back,
+                        size: ResponsiveHelper.getResponsiveIconSize(context, 28),
+                      ),
                       onPressed: () {
                         AudioManager().playTap();
                         Navigator.pushReplacement(
@@ -47,22 +53,24 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-              const Text(
+              SizedBox(height: ResponsiveHelper.isTablet(context) ? 16 : 12),
+              Text(
                 '🎴',
-                style: TextStyle(fontSize: 60),
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.isTablet(context) ? 80 : 60,
+                ),
               ),
-              const SizedBox(height: 12),
-              const Text(
+              SizedBox(height: ResponsiveHelper.isTablet(context) ? 16 : 12),
+              Text(
                 '¡Encuentra las Parejas!',
                 style: TextStyle(
-                  fontSize: 26,
+                  fontSize: ResponsiveHelper.getResponsiveFontSize(context, 26),
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: ResponsiveHelper.isTablet(context) ? 28 : 20),
               Expanded(
                 child: SingleChildScrollView(
                   child: Column(
@@ -76,7 +84,7 @@ class HomeScreen extends StatelessWidget {
                         stars: '⭐',
                         color: Colors.green.shade300,
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: ResponsiveHelper.isTablet(context) ? 32 : 24),
                       _buildLevelButton(
                         context,
                         level: 'medium',
@@ -85,7 +93,7 @@ class HomeScreen extends StatelessWidget {
                         stars: '⭐⭐',
                         color: Colors.orange.shade300,
                       ),
-                      const SizedBox(height: 24),
+                      SizedBox(height: ResponsiveHelper.isTablet(context) ? 32 : 24),
                       _buildLevelButton(
                         context,
                         level: 'hard',
@@ -94,7 +102,7 @@ class HomeScreen extends StatelessWidget {
                         stars: '⭐⭐⭐',
                         color: Colors.red.shade300,
                       ),
-                      const SizedBox(height: 20),
+                      SizedBox(height: ResponsiveHelper.isTablet(context) ? 28 : 20),
                     ],
                   ),
                 ),
@@ -114,22 +122,40 @@ class HomeScreen extends StatelessWidget {
     required String stars,
     required Color color,
   }) {
+    final isTablet = ResponsiveHelper.isTablet(context);
     return GestureDetector(
       onTap: () {
         AudioManager().playTap();
-        context.read<GameProvider>().initializeGame(level);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const GameScreen()),
-        );
+        
+        // Mostrar interstitial si está disponible y cumple con la frecuencia
+        if (AdFrequencyManager.canShowInterstitial()) {
+          AdManager().showInterstitialAd();
+          AdFrequencyManager.markInterstitialShown();
+        }
+        
+        // Inicializar juego
+        context.read<GameProvider>().initializeGame(level, gameName: 'memory');
+        
+        // Pequeño delay para que se muestre el anuncio antes de navegar
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (context.mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const GameScreen()),
+            );
+          }
+        });
       },
       child: Container(
-        width: 280,
-        constraints: const BoxConstraints(minHeight: 100),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        width: isTablet ? 360 : 280,
+        constraints: BoxConstraints(minHeight: isTablet ? 120 : 100),
+        padding: EdgeInsets.symmetric(
+          vertical: isTablet ? 16 : 12,
+          horizontal: isTablet ? 20 : 16,
+        ),
         decoration: BoxDecoration(
           color: color,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(isTablet ? 24 : 20),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.2),
@@ -144,22 +170,24 @@ class HomeScreen extends StatelessWidget {
           children: [
             Text(
               stars,
-              style: const TextStyle(fontSize: 28),
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 28),
+              ),
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: isTablet ? 8 : 6),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 24,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 24),
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
             ),
-            const SizedBox(height: 2),
+            SizedBox(height: isTablet ? 4 : 2),
             Text(
               subtitle,
-              style: const TextStyle(
-                fontSize: 14,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.getResponsiveFontSize(context, 14),
                 color: Colors.white70,
               ),
             ),

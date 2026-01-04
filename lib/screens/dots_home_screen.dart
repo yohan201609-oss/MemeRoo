@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/dots_provider.dart';
+import '../providers/game_provider.dart';
 import '../utils/colors.dart';
 import '../utils/audio_manager.dart';
+import '../utils/ad_manager.dart';
+import '../utils/ad_frequency_manager.dart';
 import '../widgets/help_button.dart';
 import 'dots_game_screen.dart';
 import 'main_menu_screen.dart';
@@ -156,11 +159,29 @@ class _DotsHomeScreenState extends State<DotsHomeScreen> {
   }) {
     return GestureDetector(
       onTap: () {
+        AudioManager().playTap();
+        
+        // Mostrar interstitial si está disponible y cumple con la frecuencia
+        if (AdFrequencyManager.canShowInterstitial()) {
+          AdManager().showInterstitialAd();
+          AdFrequencyManager.markInterstitialShown();
+        }
+        
+        // Actualizar GameProvider con el nombre del juego para el sistema de pistas
+        context.read<GameProvider>().initializeGame(level, gameName: 'dots');
+        
+        // Inicializar juego
         context.read<DotsProvider>().initializeGame(level);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const DotsGameScreen()),
-        );
+        
+        // Pequeño delay para que se muestre el anuncio antes de navegar
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (context.mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const DotsGameScreen()),
+            );
+          }
+        });
       },
       child: Container(
         width: 280,

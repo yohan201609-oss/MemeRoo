@@ -31,6 +31,16 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        
+        <!-- AdMob App ID -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-2612958934827252~1404106579"/>
+        
+        <!-- Contenido para niños (COPPA) - IMPORTANTE para apps infantiles -->
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.FAMILY_SELF_CERTIFIED_ADS"
+            android:value="true"/>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

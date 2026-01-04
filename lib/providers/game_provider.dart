@@ -18,6 +18,9 @@ class GameProvider extends ChangeNotifier {
   int _moves = 0;
   GameState _gameState = GameState.playing;
   bool _canFlip = true;
+  int _hintsUsed = 0;
+  static const int _maxHints = 3;
+  String _currentGame = 'memory'; // Identificador del juego actual
 
   @override
   void notifyListeners() {
@@ -32,6 +35,10 @@ class GameProvider extends ChangeNotifier {
   int get moves => _moves;
   GameState get gameState => _gameState;
   String get currentLevel => _currentLevel;
+  int get hintsUsed => _hintsUsed;
+  int get hintsRemaining => _maxHints - _hintsUsed;
+  bool get canUseHint => _hintsUsed < _maxHints;
+  String get currentGame => _currentGame;
 
   // Almacenar mejores puntuaciones por nivel
   final Map<String, int> _bestStars = {
@@ -52,13 +59,15 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
-  void initializeGame(String level) {
+  void initializeGame(String level, {String gameName = 'memory'}) {
     _currentLevel = level;
+    _currentGame = gameName; // Identificar el juego actual
     _pairsFound = 0;
     _moves = 0;
     _gameState = GameState.playing;
     _flippedCards.clear();
     _canFlip = true;
+    _hintsUsed = 0;
 
     final pairs = GameConstants.levelConfig[level]!['pairs']!;
     final selectedAnimals = GameConstants.animals.take(pairs).toList();
@@ -168,12 +177,19 @@ class GameProvider extends ChangeNotifier {
     }
   }
 
-  void resetGame() {
-    initializeGame(_currentLevel);
+  void useHint() {
+    if (canUseHint) {
+      _hintsUsed++;
+      notifyListeners();
+    }
   }
 
-  void startGame(String level) {
-    initializeGame(level);
+  void resetGame() {
+    initializeGame(_currentLevel, gameName: _currentGame);
+  }
+
+  void startGame(String level, {String gameName = 'memory'}) {
+    initializeGame(level, gameName: gameName);
   }
 
   @override

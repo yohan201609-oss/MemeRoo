@@ -87,7 +87,7 @@ class LevelSelectionScreen extends StatelessWidget {
   }) {
     return GestureDetector(
       onTap: () {
-        context.read<GameProvider>().initializeGame(level);
+        context.read<GameProvider>().initializeGame(level, gameName: 'memory');
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const GameScreen()),
